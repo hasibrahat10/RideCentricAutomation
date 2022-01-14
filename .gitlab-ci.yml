@@ -1,0 +1,36 @@
+variables:
+  WORK_DIR: ${CI_PROJECT_DIR}
+  BRANCH: ${CI_COMMIT_REF_NAME}
+  IMAGE: ${CI_PROJECT_NAME}-image-${CI_PIPELINE_IID}
+  CONTAINER: ${CI_PROJECT_NAME}-container-${CI_PIPELINE_IID}
+ 
+
+stages:
+  - print-variable-value
+  - docker-image-build
+  - docker-test-run
+  - docker-image-delete
+
+Print variable values Job:
+  stage: print-variable-value
+  script:
+    - "${WORK_DIR}"
+    - "${BRANCH}"
+    - "${IMAGE}"
+    - "${CONTAINER}"
+
+Build docker image:
+  stage: docker-image-build
+  script:
+    - "docker build -t ${IMAGE} --file ${WORK_DIR}/Dockerfile ${WORK_DIR}"
+
+Run tests in docker:
+  stage: docker-test-run
+  script:
+    - "docker run -t --name ${CONTAINER} ${IMAGE} mvn test -q"
+
+Delete docker image:
+  stage: docker-image-delete
+  script:
+    - "docker rm  ${CONTAINER}"
+    - "docker rmi ${IMAGE} -f"
